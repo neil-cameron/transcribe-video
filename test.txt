@@ -1,0 +1,35 @@
+Person 1 [0:00:01]
+procedures currently using some of the IP from the medical.
+
+Person 2 [0:00:07]
+Got you. So you've got one product in development, hopefully more coming soon. And you guys, I presume, are responsible for sort of the design, but maybe some of the manufacturer is contracted out. Or do you need a manufacturing house too?
+
+Person 1 [0:00:24]
+No, we don't currently have a CN, someone that's doing our contract manufacturing, like for instance in China or something like that. Okay. We do the manufacturing ourselves as far as assembly goes. Understood. Right now we're not building for scale.
+
+Person 2 [0:00:43]
+Yeah, yeah, yeah, yeah. Sounds like, yeah, relatively early but exciting days. And roughly what is your team size at the moment then?
+
+Person 1 [0:00:51]
+my electrical team service.
+
+Person 2 [0:00:53]
+Oh let's start there and then we can do whole company as well just to give us a sense for the bracket.
+
+Person 1 [0:00:59]
+Let's see, about 10. Okay. Yeah. From my electrical team. Yep, makes sense. And then the company is over 200. Okay.
+
+Person 2 [0:01:14]
+Got you, got you. Cool, so I'm gonna start quite specific, Jason, and then I'm gonna kind of zoom out to the bigger picture. So my first question I'd like to dig into actually is how do you guys manage requirements within your engineering work?
+
+Person 1 [0:01:36]
+General.
+
+Person 2 [0:01:37]
+Gemma, okay, straight in there. Are requirements critical to what you do?
+
+Person 1 [0:01:43]
+Incredibly critical. So there are different sorts of requirements, as you probably know. There's like, my team is mostly focused on hardware component specifications. Different aspects of what the boards are intended to do. And then, and then there's a higher level system subsystem specifications. And those are how the boards kind of interact with the system as a whole. And then there's another level, which is like the high level. What the system as a whole is supposed to do as opposed to how our boards are supposed to integrate with the rest of the system. So there's, you know, three levels. The general system requirements are the highest level.
+
+Person 2 [0:02:39]
+understood and were the requirements for what you do kind of like the first thing that was developed so was like a complete breakdown of these three levels done and then you moved into engineering or do the two happen concurrently.
