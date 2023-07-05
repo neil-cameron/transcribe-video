@@ -24,7 +24,11 @@ parser.add_argument(
     help="The number of speakers in the video",
     default=2,
 )
-parser.add_argument("file_path", nargs="+")
+parser.add_argument(
+    "file_path",
+    nargs="+",
+    help="A full or relative path to a media file or several media files to transcribe",
+)
 args = parser.parse_args()
 
 # Diarization and transcription model initialisation
@@ -88,16 +92,20 @@ for file_path_item in args.file_path:
     for segment in master_dictionary:
         old_label = str(segment["label"])
         segment["label"] = mapping[old_label]
-    
+
     # Main itteration over speakers
     print("Transcribing...")
     for speaker in master_dictionary:
-        speaker_start_ms = speaker["start"]*1000
-        speaker_end_ms = speaker["end"]*1000
-        wav_segment = AudioSegment.from_wav(wav_audio_file_path)[speaker_start_ms:speaker_end_ms].export(wav_segment_file_path, format="wav") 
+        speaker_start_ms = speaker["start"] * 1000
+        speaker_end_ms = speaker["end"] * 1000
+        wav_segment = AudioSegment.from_wav(wav_audio_file_path)[
+            speaker_start_ms:speaker_end_ms
+        ].export(wav_segment_file_path, format="wav")
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            transcribed_segment = model.transcribe(str(wav_segment_file_path))["segments"]
+            transcribed_segment = model.transcribe(str(wav_segment_file_path))[
+                "segments"
+            ]
         os.remove(wav_segment_file_path)
         all_transcribed_lines = []
         for line in transcribed_segment:
@@ -111,16 +119,16 @@ for file_path_item in args.file_path:
         # Get the data to add to the speaker and timestamp line
         new_speaker = speaker["label"]
         new_speaker_start_time = speaker["start"]
-        new_speaker_start_time = f"{float(new_speaker_start_time):.0f}"  # Format seconds to whole numbers
+        new_speaker_start_time = (
+            f"{float(new_speaker_start_time):.0f}"  # Format seconds to whole numbers
+        )
         new_speaker_start_time = str(
             datetime.timedelta(seconds=float(new_speaker_start_time))
         )  # Format as H:M:S
 
         # Add the speaker and timestamp line
         if 1 == 0:
-            transcribed_text_list.append(
-                f"{new_speaker} [{new_speaker_start_time}]\n"
-            )
+            transcribed_text_list.append(f"{new_speaker} [{new_speaker_start_time}]\n")
         else:
             transcribed_text_list.append(
                 f"\n\n{new_speaker} [{new_speaker_start_time}]\n"
