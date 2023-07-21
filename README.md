@@ -10,7 +10,7 @@ transcribe_v_ideo.py [-h] [-n NUMBER_SPEAKERS] file_path [file_path ...]
 
 file_path
 
-A full or relative path to a media file or several media files to transcribe. Typically these will be videos or mp3s.
+A full or relative path to a media file, several media files or a directory of media files to transcribe. Typically these will be videos or mp3s.
 
 
 ## Optional Arguments:

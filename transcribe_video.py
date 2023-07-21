@@ -27,9 +27,29 @@ parser.add_argument(
 parser.add_argument(
     "file_path",
     nargs="+",
-    help="A full or relative path to a media file or several media files to transcribe",
+    help="A full or relative path to a media file, several media files or a directory of media files to transcribe",
 )
 args = parser.parse_args()
+
+# Parse arguments
+argparse_list_of_paths = []
+if args.file_path:
+    [
+        argparse_list_of_paths.append(individual_path)
+        for individual_path in args.file_path
+    ]
+
+full_file_path_list = []  # This is sent to the main transcribing function
+for individual_path in argparse_list_of_paths:
+    if os.path.isdir(individual_path):  # Directory
+        for dir_path, dir_names, file_names in os.walk(individual_path):
+            for file_name in file_names:
+                if not file_name.startswith("."):
+                    file_path_found = os.path.join(dir_path, file_name)
+                    full_file_path_list.append(file_path_found)
+    else:  # File
+        full_file_path_list.append(individual_path)
+
 
 # Diarization and transcription model initialisation
 model = whisper.load_model("small.en")  # tiny.en, base.en, small.en, medium.en
@@ -38,7 +58,7 @@ diar = Diarizer(
     cluster_method="sc",  # 'ahc' and 'sc' supported
 )
 
-for file_path_item in args.file_path:
+for file_path_item in full_file_path_list:
     # File paths
     file_name = Path(file_path_item).stem
     file_parent = Path(file_path_item).parents[0]
