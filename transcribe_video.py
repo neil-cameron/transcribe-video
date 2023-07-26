@@ -58,7 +58,7 @@ diar = Diarizer(
     cluster_method="sc",  # 'ahc' and 'sc' supported
 )
 
-for file_path_item in full_file_path_list:
+for i, file_path_item in enumerate(full_file_path_list):
     # File paths
     file_name = Path(file_path_item).stem
     file_parent = Path(file_path_item).parents[0]
@@ -73,6 +73,7 @@ for file_path_item in full_file_path_list:
     subprocess.call(command, shell=True)
 
     # Diarization
+    print(f"Diarizing file {i+1} of {len(full_file_path_list)}...")
     diarization = diar.diarize(
         str(wav_audio_file_path), num_speakers=args.number_speakers
     )
@@ -114,7 +115,7 @@ for file_path_item in full_file_path_list:
         segment["label"] = mapping[old_label]
 
     # Main itteration over speakers
-    print("Transcribing...")
+    print(f"Transcribing file {i+1} of {len(full_file_path_list)}...")
     for speaker in master_dictionary:
         speaker_start_ms = speaker["start"] * 1000
         speaker_end_ms = speaker["end"] * 1000
