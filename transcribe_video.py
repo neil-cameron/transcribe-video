@@ -72,33 +72,53 @@ for file_counter, file_path_item in enumerate(full_file_path_list):
     command = f"ffmpeg -y -i '{file_path_item}' -acodec pcm_s16le -ar 16000 -ac 1 '{wav_audio_file_path}'"
     subprocess.call(command, shell=True)
 
-    # Diarization
-    print(f"Diarizing file {file_counter+1} of {len(full_file_path_list)}...")
-    diarization = diar.diarize(
-        str(wav_audio_file_path), num_speakers=args.number_speakers
-    )
+    if args.number_speakers > 1:  # We need diarization
+        # Diarization
+        print(f"Diarizing file {file_counter+1} of {len(full_file_path_list)}...")
+        diarization = diar.diarize(
+            str(wav_audio_file_path), num_speakers=args.number_speakers
+        )
 
-    # Clean diarization results
-    master_dictionary = []
-    first_speaker = -1
-    current_speaker = -1
-    current_speaker_start = -1
-    for segment in diarization:
-        segment.pop("start_sample")
-        segment.pop("end_sample")
-        if first_speaker == -1:
-            first_speaker = segment["label"]
-            current_speaker = segment["label"]
-            current_speaker_start = segment["start"]
-        if segment["label"] != current_speaker:
+        # Clean diarization results
+        master_dictionary = []
+        first_speaker = -1
+        current_speaker = -1
+        current_speaker_start = -1
+        for segment in diarization:
+            segment.pop("start_sample")
+            segment.pop("end_sample")
+            if first_speaker == -1:
+                first_speaker = segment["label"]
+                current_speaker = segment["label"]
+                current_speaker_start = segment["start"]
+            if segment["label"] != current_speaker:
+                dict_to_add = {
+                    "start": current_speaker_start,
+                    "end": segment["start"],
+                    "label": current_speaker,
+                }
+                master_dictionary.append(dict_to_add)
+                current_speaker = segment["label"]
+                current_speaker_start = segment["start"]
+
+    else:  # Fake the diarization
+        master_dictionary = []
+        number_of_divisions = (
+            10  # How many pieces to chunk the transcript into for legibility
+        )
+
+        wav_file = sf.SoundFile(wav_audio_file_path)
+        wav_file_len_sec = len(wav_file) / wav_file.samplerate
+        wav_file_len_ms = wav_file_len_sec * 1000
+        division_length_sec = wav_file_len_sec / number_of_divisions
+
+        for div in range(number_of_divisions):
             dict_to_add = {
-                "start": current_speaker_start,
-                "end": segment["start"],
-                "label": current_speaker,
+                "start": div * division_length_sec,
+                "end": (div + 1) * division_length_sec,
+                "label": 0,
             }
             master_dictionary.append(dict_to_add)
-            current_speaker = segment["label"]
-            current_speaker_start = segment["start"]
 
     # Re-lable the speakers to be more friendly
     speaker_labels = set()
