@@ -10,6 +10,7 @@ from simple_diarizer.diarizer import (
 )  # https://github.com/cvqluu/simple_diarizer
 from pydub import AudioSegment
 import warnings
+import summarise
 
 # Argparse stuff
 parser = argparse.ArgumentParser(
@@ -182,11 +183,21 @@ for file_counter, file_path_item in enumerate(full_file_path_list):
     # Post process the list of segments and speaker lines into a single string and clean
     transcribed_text = "".join(transcribed_text_list)
     transcribed_text = transcribed_text.replace("\n ", "\n").lstrip()
+    print(transcribed_text)
+
+    # Summarise the transcribed text
+    summary_length = 300
+    summary = summarise.summarise(transcribed_text, summary_length)
+    print("-----")
+    print(summary)
+    summarised_transcribed_text = "\n\n\n".join([summary, transcribed_text])
+    print("-----")
+    print(summarised_transcribed_text)
 
     # Create text file
     text_file_path = Path(file_parent).joinpath(f"{file_name}.txt")
     file = open(text_file_path, "w")
-    file.write(transcribed_text)
+    file.write(summarised_transcribed_text)
 
     # Delete the mp3 and wav
     # os.remove(mp3_audio_file_path)

@@ -1,6 +1,6 @@
 # Transcribe Video
 
-A script that takes the path to a video file and diarises it using Simple Diariser and transcribes it using Whisper from OpenAI
+A script that takes the path to a video file and diarises it using Simple Diariser and transcribes it using Whisper from OpenAI. It then places a summary at the top using ChatGPT.
 
 ## Usage:
 

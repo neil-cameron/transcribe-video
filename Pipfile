@@ -10,6 +10,7 @@ pydub = "*"
 pip = "*"
 install = "*"
 openai-whisper = "*"
+openai = "*"
 
 [dev-packages]
 black = "*"
