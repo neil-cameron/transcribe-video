@@ -9,8 +9,9 @@ soundfile = "*"
 pydub = "*"
 pip = "*"
 install = "*"
-openai-whisper = "*"
 openai = "*"
+whisper-cpp-python = "*"
+openai-whisper = "*"
 
 [dev-packages]
 black = "*"
