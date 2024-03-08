@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "891b4ef68a42adb32001ca58edf9d0a4241deb710dd8baa7bdb5d07d0bc86e4e"
+            "sha256": "2520c9a645788535d0ad606d080864df05466fe5ff71c8bff663d2b386b44c72"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -389,11 +389,11 @@
         },
         "huggingface-hub": {
             "hashes": [
-                "sha256:94e7f8e074475fbc67d6a71957b678e1b4a74ff1b64a644fd6cbb83da962d05d",
-                "sha256:d988ae4f00d3e307b0c80c6a05ca6dbb7edba8bba3079f74cda7d9c2e562a7b6"
+                "sha256:26a15b604e4fc7bad37c467b76456543ec849386cbca9cd7e1e135f53e500423",
+                "sha256:b183144336fdf2810a8c109822e0bb6ef1fd61c65da6fb60e8c3f658b7144016"
             ],
             "markers": "python_full_version >= '3.8.0'",
-            "version": "==0.20.3"
+            "version": "==0.21.3"
         },
         "hyperpyyaml": {
             "hashes": [
@@ -875,11 +875,11 @@
         },
         "openai": {
             "hashes": [
-                "sha256:99c5d257d09ea6533d689d1cc77caa0ac679fa21efef8893d8b0832a86877f1b",
-                "sha256:a54002c814e05222e413664f651b5916714e4700d041d5cf5724d3ae1a3e3481"
+                "sha256:5769b62abd02f350a8dd1a3a242d8972c947860654466171d60fb0972ae0a41c",
+                "sha256:ff6c6b3bc7327e715e4b3592a923a5a1c7519ff5dd764a83d69f633d49e77a7b"
             ],
             "index": "pypi",
-            "version": "==1.12.0"
+            "version": "==1.13.3"
         },
         "openai-whisper": {
             "hashes": [
@@ -1076,11 +1076,11 @@
         },
         "pydantic": {
             "hashes": [
-                "sha256:37a5432e54b12fecaa1049c5195f3d860a10e01bdfd24f1840ef14bd0d3aeab3",
-                "sha256:a09be1c3d28f3abe37f8a78af58284b236a92ce520105ddc91a6d29ea1176ba7"
+                "sha256:72c6034df47f46ccdf81869fddb81aade68056003900a8724a4f160700016a2a",
+                "sha256:e07805c4c7f5c6826e33a1d4c9d47950d7eaf34868e2690f8594d2e30241f11f"
             ],
             "markers": "python_version >= '3.8'",
-            "version": "==2.6.2"
+            "version": "==2.6.3"
         },
         "pydantic-core": {
             "hashes": [
@@ -1625,11 +1625,11 @@
         },
         "speechbrain": {
             "hashes": [
-                "sha256:3b400b077d5b9c260c54ceadd4a1ae8e06d6f0b768e8e552bc0448b816f9050d",
-                "sha256:cfbf6176da8879b541e1a2d1342d43806e82d0ef55604c2f38e21a5027a2eecb"
+                "sha256:3f163958fc5a6dc05851700e8cee9d828110fbb7a8defec911f25849ce33f45f",
+                "sha256:f44797a23e0351f6ebf5ffd323bf44857431b2ffa55ec8e0c9f66e2ac6f6cea7"
             ],
             "markers": "python_version >= '3.7'",
-            "version": "==0.5.16"
+            "version": "==1.0.0"
         },
         "stack-data": {
             "hashes": [
@@ -1803,6 +1803,13 @@
                 "sha256:72ea0c06399eb286d978fdedb6923a9eb47e1c486ce63e9b4e64fc18303972b5"
             ],
             "version": "==0.2.13"
+        },
+        "whisper": {
+            "hashes": [
+                "sha256:435b4fb843c4c752719bdf0511a652d5be710e9bb35ad9ebe3b133268ee31c44"
+            ],
+            "index": "pypi",
+            "version": "==1.1.10"
         },
         "whisper-cpp-python": {
             "hashes": [

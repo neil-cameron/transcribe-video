@@ -5,7 +5,9 @@ openai.api_key = config.authorization
 
 
 # Completion
-def get_completion(prompt, model="gpt-4-1106-preview", temperature=0):
+def get_completion(
+    prompt, model="gpt-3.5-turbo", temperature=0
+):  # gpt-3.5-turbo, gpt-4-1106-preview
     messages = [{"role": "user", "content": prompt}]
     response = openai.chat.completions.create(
         model=model,
