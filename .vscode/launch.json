@@ -12,7 +12,7 @@
             "console": "integratedTerminal",
             "args": [
                 "--number_speakers",
-                "1",
+                "2",
                 "/Users/neil/Downloads/test.mp4",
             ],
         }

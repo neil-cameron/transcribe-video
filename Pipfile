@@ -4,7 +4,6 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-simple-diarizer = "*"
 soundfile = "*"
 pydub = "*"
 pip = "*"
@@ -13,6 +12,7 @@ openai = "*"
 whisper-cpp-python = "*"
 openai-whisper = "*"
 whisper = "*"
+simple-diarizer = "*"
 
 [dev-packages]
 black = "*"

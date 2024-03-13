@@ -1,10 +1,5 @@
 import argparse
 import os
-
-# os.environ["WHISPER_CPP_LIB"] = (
-#     "/Users/neil/.local/share/virtualenvs/Transcribe_Video_Py-ovLxUKin/lib/python3.9/site-packages/whisper_cpp_python/libwhisper.dylib"
-# )
-# from whisper_cpp_python import Whisper  # https://pypi.org/project/whisper-cpp-python/
 import whisper  # https://github.com/lablab-ai/Whisper-transcription_and_diarization-speaker-identification-, https://lablab.ai/t/whisper-transcription-and-speaker-identification
 from pathlib import Path
 import subprocess
@@ -16,6 +11,10 @@ from simple_diarizer.diarizer import (
 from pydub import AudioSegment
 import warnings
 import summarise
+import time
+
+# Start timing
+start_time = time.time()
 
 # Argparse stuff
 parser = argparse.ArgumentParser(
@@ -58,7 +57,6 @@ for individual_path in argparse_list_of_paths:
 
 
 # Diarization and transcription model initialisation
-# model = Whisper(model_path="whisper_cpp_models/ggml-model-whisper-small.en.bin")
 model = whisper.load_model("small.en")  # tiny.en, base.en, small.en, medium.en
 diar = Diarizer(
     embed_model="xvec",  # 'xvec' and 'ecapa' supported
@@ -69,13 +67,10 @@ for file_counter, file_path_item in enumerate(full_file_path_list):
     # File paths
     file_name = Path(file_path_item).stem
     file_parent = Path(file_path_item).parents[0]
-    # mp3_audio_file_path = Path(file_parent).joinpath(f"{file_name}.mp3")
     wav_audio_file_path = Path(file_parent).joinpath(f"{file_name}.wav")
     wav_segment_file_path = Path(file_parent).joinpath(f"{file_name}_segment.wav")
 
-    # Generate an mp3 and wav
-    # command = f"ffmpeg -i '{file_path_item}' '{mp3_audio_file_path}'"
-    # subprocess.call(command, shell=True)
+    # Generate a wav
     command = f"ffmpeg -y -i '{file_path_item}' -acodec pcm_s16le -ar 16000 -ac 1 '{wav_audio_file_path}'"
     subprocess.call(command, shell=True)
 
@@ -149,9 +144,6 @@ for file_counter, file_path_item in enumerate(full_file_path_list):
         wav_segment = AudioSegment.from_wav(wav_audio_file_path)[
             speaker_start_ms:speaker_end_ms
         ].export(wav_segment_file_path, format="wav")
-        # with warnings.catch_warnings():
-        #     warnings.simplefilter("ignore")
-        #     transcribed_segment = model.transcribe(str(wav_segment_file_path))["text"]
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             transcribed_segment = model.transcribe(str(wav_segment_file_path))[
@@ -160,7 +152,6 @@ for file_counter, file_path_item in enumerate(full_file_path_list):
         os.remove(wav_segment_file_path)
         all_transcribed_lines = []
         for line in transcribed_segment:
-            # all_transcribed_lines.append(line)
             all_transcribed_lines.append(line["text"])
         speaker_transcription = "".join(all_transcribed_lines)
         speaker["transcription"] = speaker_transcription.lstrip()
@@ -204,6 +195,11 @@ for file_counter, file_path_item in enumerate(full_file_path_list):
     file = open(text_file_path, "w")
     file.write(summarised_transcribed_text)
 
+    # End timing
+    elapsed_time = time.time() - start_time  # Calculate elapsed time
+    elapsed_minutes = int(elapsed_time / 60)
+    elapsed_seconds = int(elapsed_time % 60)
+    print(f"Elapsed time: {elapsed_minutes:.0f}:{elapsed_seconds:.2f}")
+
     # Delete the mp3 and wav
-    # os.remove(mp3_audio_file_path)
     os.remove(wav_audio_file_path)
