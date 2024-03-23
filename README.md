@@ -4,7 +4,7 @@ A script that takes the path to a video file and diarises it using Simple Diaris
 
 ## Usage:
 
-transcribe_v_ideo.py [-h] [-n NUMBER_SPEAKERS] file_path [file_path ...]
+transcribe_video.py [-h] [-n NUMBER_SPEAKERS] file_path [file_path ...]
 
 ## Positional Arguments:
 
