@@ -17,8 +17,8 @@ def get_completion(
     return response.choices[0].message.content
 
 
-# Prompt
-def prompt_and_complete(summary_length, text_to_summarise):
+# Prompt summarise
+def prompt_and_complete_summarise(summary_length, text_to_summarise):
     prompt = f"""
     Your task is to generate a short summary of the text below (delimited by triple backticks) in at most {summary_length} words. 
 
@@ -55,7 +55,9 @@ def batch_summariser(text, batch_summary_length, max_batch_size):
         while not success:
             if timeout_counter < 10:
                 try:
-                    response = prompt_and_complete(batch_summary_length, word_batch)
+                    response = prompt_and_complete_summarise(
+                        batch_summary_length, word_batch
+                    )
                     batch_summaries.append(response)
                     success = True
                 except:
@@ -108,3 +110,54 @@ def summarise(text_to_summarise, summary_length):
             break
 
     return batch_summary
+
+
+# Prompt actions
+def prompt_and_complete_actions(text_to_find_actions):
+    prompt = f"""
+    Your task is to hunt through the meeting transcript below (delimited by triple backticks) and find anything that looks like a meeting action.
+    Give me back a list of these actions (using hyphens as bullets) that summarises the action along with which person is doing it and by when if this information is available.
+    If there are no actions provide me with one hypenated bullet that states that there are no actions from this meeting.
+
+    The text: ```{text_to_find_actions}```
+    """
+
+    return get_completion(prompt)
+
+
+def find_actions(text_to_find_actions):
+    # Settings
+    max_batch_size = 600  # Number of words that are equivalent to the max number of tokens CHAT-GPT allows
+
+    # Read the text and split it into a list of words
+    text = str(text_to_find_actions.replace("\n", ""))
+    text_word_lst = text.split()
+
+    text_groups = []
+    if len(text_word_lst) < max_batch_size:
+        text_groups.append(" ".join(text_word_lst))
+    else:
+        while len(text_word_lst) > max_batch_size:
+            text_groups.append(" ".join(text_word_lst[:max_batch_size]))
+            text_word_lst = text_word_lst[max_batch_size:]
+
+    actions_strings = []
+    for text_group in text_groups:
+        success = False
+        timeout_counter = 0
+        while not success:
+            if timeout_counter < 10:
+                try:
+                    response = prompt_and_complete_actions(text_group)
+                    print(response)
+                    actions_strings.append(response)
+                    success = True
+                except:
+                    pass
+            else:
+                break
+
+    # Create a single string of all the summaries
+    actions = "\n".join(actions_strings)
+
+    return actions
