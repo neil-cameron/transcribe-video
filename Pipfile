@@ -13,6 +13,7 @@ whisper-cpp-python = "*"
 openai-whisper = "*"
 whisper = "*"
 simple-diarizer = "*"
+speechbrain = "0.5.16"
 
 [dev-packages]
 black = "*"

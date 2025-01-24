@@ -6,7 +6,7 @@ openai.api_key = config.authorization
 
 # Completion
 def get_completion(
-    prompt, model="gpt-3.5-turbo", temperature=0
+    prompt, model="gpt-4o", temperature=0
 ):  # gpt-3.5-turbo, gpt-4-1106-preview
     messages = [{"role": "user", "content": prompt}]
     response = openai.chat.completions.create(
@@ -73,7 +73,7 @@ def batch_summariser(text, batch_summary_length, max_batch_size):
 
 def summarise(text_to_summarise, summary_length):
     # Settings
-    max_batch_size = 600  # Number of words that are equivalent to the max number of tokens CHAT-GPT allows
+    max_batch_size = 64000  # Number of words that are equivalent to the max number of tokens CHAT-GPT allows
     small_batch_initial_summary_length = 30  # Summary length produced for each batch
 
     # Read the text and split it into a list of words
@@ -127,7 +127,7 @@ def prompt_and_complete_actions(text_to_find_actions):
 
 def find_actions(text_to_find_actions):
     # Settings
-    max_batch_size = 600  # Number of words that are equivalent to the max number of tokens CHAT-GPT allows
+    max_batch_size = 64000  # Number of words that are equivalent to the max number of tokens CHAT-GPT allows
 
     # Read the text and split it into a list of words
     text = str(text_to_find_actions.replace("\n", ""))
