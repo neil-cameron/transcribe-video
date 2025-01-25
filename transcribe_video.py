@@ -1,38 +1,31 @@
 import argparse
 import os
-import whisper  # https://github.com/lablab-ai/Whisper-transcription_and_diarization-speaker-identification-, https://lablab.ai/t/whisper-transcription-and-speaker-identification
+from faster_whisper import WhisperModel
 from pathlib import Path
-import subprocess
 import datetime
-import soundfile as sf
-from simple_diarizer.diarizer import (
-    Diarizer,
-)  # https://github.com/cvqluu/simple_diarizer
+from pyannote.audio import Pipeline  # For speaker diarization
 from pydub import AudioSegment
+from io import BytesIO
 import warnings
 import summarise
 import time
+import config
+import ffmpeg  # For in-memory audio extraction
+import torch
 
 # Start timing
 start_time = time.time()
 
-# Argparse stuff
+# Argparse setup
 parser = argparse.ArgumentParser(
     prog="Transcribe Video",
-    description="This program takes the path to a video file and transcribes it using Whisper from OpenAI",
+    description="This program takes the path to a video file and transcribes it using Faster-Whisper with automatic speaker diarization using Pyannote.audio",
 )
 
 parser.add_argument(
-    "-n",
-    "--number_speakers",
-    type=int,
-    help="The number of speakers in the video",
-    default=2,
-)
-parser.add_argument(
     "file_path",
     nargs="+",
-    help="A full or relative path to a media file, several media files or a directory of media files to transcribe",
+    help="A full or relative path to a media file, several media files, or a directory of media files to transcribe",
 )
 args = parser.parse_args()
 
@@ -56,153 +49,148 @@ for individual_path in argparse_list_of_paths:
         full_file_path_list.append(individual_path)
 
 
-# Diarization and transcription model initialisation
-model = whisper.load_model("small.en")  # tiny.en, base.en, small.en, medium.en
-diar = Diarizer(
-    embed_model="xvec",  # 'xvec' and 'ecapa' supported
-    cluster_method="sc",  # 'ahc' and 'sc' supported
+# Utility function to extract audio from video in memory using ffmpeg-python
+def extract_audio_from_video(video_path, target_sample_rate=16000):
+    """
+    Extract audio from a video file in memory and return it as a pydub AudioSegment.
+    """
+    out, _ = (
+        ffmpeg.input(video_path)
+        .output("pipe:1", format="wav", ac=1, ar=target_sample_rate)
+        .run(capture_stdout=True, capture_stderr=True)
+    )
+    return AudioSegment.from_file(BytesIO(out), format="wav")
+
+
+# Diarization and transcription model initialization
+model = WhisperModel("small", device="cpu")  # Faster-Whisper does not support mps
+
+# Determine device for PyTorch (mps or cpu)
+device = (
+    torch.device("mps") if torch.backends.mps.is_available() else torch.device("cpu")
 )
+
+# Initialize Pyannote pipeline and set device
+pipeline = Pipeline.from_pretrained(
+    "pyannote/speaker-diarization", use_auth_token=config.hf_authorization
+)
+pipeline.to(device)  # Set the device for the pipeline
 
 for file_counter, file_path_item in enumerate(full_file_path_list):
     # File paths
     file_name = Path(file_path_item).stem
     file_parent = Path(file_path_item).parents[0]
-    wav_audio_file_path = Path(file_parent).joinpath(f"{file_name}.wav")
-    wav_segment_file_path = Path(file_parent).joinpath(f"{file_name}_segment.wav")
 
-    # Generate a wav
-    command = f"ffmpeg -y -i '{file_path_item}' -acodec pcm_s16le -ar 16000 -ac 1 '{wav_audio_file_path}'"
-    subprocess.call(command, shell=True)
-
-    if args.number_speakers > 1:  # We need diarization
-        # Diarization
-        print(f"Diarizing file {file_counter+1} of {len(full_file_path_list)}...")
-        diarization = diar.diarize(
-            str(wav_audio_file_path), num_speakers=args.number_speakers
+    # Check if the input is a video or audio file
+    if file_path_item.lower().endswith((".mp4", ".mkv", ".avi", ".mov")):
+        # Extract audio from video
+        print(f"Extracting audio from video: {file_path_item}...")
+        audio = extract_audio_from_video(file_path_item)
+    else:
+        # Load audio directly
+        audio = (
+            AudioSegment.from_file(file_path_item).set_frame_rate(16000).set_channels(1)
         )
 
-        # Clean diarization results
-        master_dictionary = []
-        first_speaker = -1
-        current_speaker = -1
-        current_speaker_start = -1
-        for segment in diarization:
-            segment.pop("start_sample")
-            segment.pop("end_sample")
-            if first_speaker == -1:
-                first_speaker = segment["label"]
-                current_speaker = segment["label"]
-                current_speaker_start = segment["start"]
-            if segment["label"] != current_speaker:
-                dict_to_add = {
-                    "start": current_speaker_start,
-                    "end": segment["start"],
-                    "label": current_speaker,
-                }
-                master_dictionary.append(dict_to_add)
-                current_speaker = segment["label"]
-                current_speaker_start = segment["start"]
+    # Convert the in-memory `pydub.AudioSegment` into a BytesIO file-like object
+    audio_buffer = BytesIO()
+    audio.export(audio_buffer, format="wav")
+    audio_buffer.seek(0)
 
-    else:  # Fake the diarization
-        master_dictionary = []
-        number_of_divisions = (
-            10  # How many pieces to chunk the transcript into for legibility
+    # Speaker diarization using pyannote.audio
+    print(f"Diarizing file {file_counter+1} of {len(full_file_path_list)}...")
+    diarization = pipeline({"uri": file_name, "audio": audio_buffer})
+
+    # Parse diarization results into a clean format
+    # Create a mapping for speaker labels
+    speaker_mapping = {}
+    speaker_count = 1
+
+    master_dictionary = []
+    for turn, _, speaker in diarization.itertracks(yield_label=True):
+        if speaker not in speaker_mapping:
+            speaker_mapping[speaker] = f"Speaker {speaker_count}"
+            speaker_count += 1
+        master_dictionary.append(
+            {"start": turn.start, "end": turn.end, "label": speaker_mapping[speaker]}
         )
 
-        wav_file = sf.SoundFile(wav_audio_file_path)
-        wav_file_len_sec = len(wav_file) / wav_file.samplerate
-        wav_file_len_ms = wav_file_len_sec * 1000
-        division_length_sec = wav_file_len_sec / number_of_divisions
+    # Group contiguous segments by speaker
+    grouped_segments = []
+    current_speaker = None
+    current_group = {"speaker": None, "start": None, "end": None}
 
-        for div in range(number_of_divisions):
-            dict_to_add = {
-                "start": div * division_length_sec,
-                "end": (div + 1) * division_length_sec,
-                "label": 0,
-            }
-            master_dictionary.append(dict_to_add)
-
-    # Re-lable the speakers to be more friendly
-    speaker_labels = set()
-    [speaker_labels.add(dz_segment["label"]) for dz_segment in master_dictionary]
-    speaker_labels = list(speaker_labels)
-    speaker_labels = [str(label) for label in speaker_labels]
-
-    new_speaker_labels = []
-    for i in range(1, (len(speaker_labels) + 1)):
-        new_speaker_labels.append(f"Person {i}")
-    mapping = dict(zip(speaker_labels, new_speaker_labels))
     for segment in master_dictionary:
-        old_label = str(segment["label"])
-        segment["label"] = mapping[old_label]
+        if segment["label"] != current_speaker:
+            if current_speaker is not None:
+                grouped_segments.append(current_group)
+            current_speaker = segment["label"]
+            current_group = {
+                "speaker": current_speaker,
+                "start": segment["start"],
+                "end": segment["end"],
+            }
+        else:
+            current_group["end"] = segment["end"]  # Extend the end time of the group
+    grouped_segments.append(current_group)  # Add the last group
 
-    # Main itteration over speakers
+    # Transcribe grouped segments
     print(f"Transcribing file {file_counter+1} of {len(full_file_path_list)}...")
-    for speaker in master_dictionary:
-        speaker_start_ms = speaker["start"] * 1000
-        speaker_end_ms = speaker["end"] * 1000
-        wav_segment = AudioSegment.from_wav(wav_audio_file_path)[
-            speaker_start_ms:speaker_end_ms
-        ].export(wav_segment_file_path, format="wav")
+    for group in grouped_segments:
+        speaker = group["speaker"]
+        speaker_start_ms = int(group["start"] * 1000)
+        speaker_end_ms = int(group["end"] * 1000)
+
+        # Extract the audio segment in memory
+        wav_segment = audio[speaker_start_ms:speaker_end_ms]
+
+        # Export the audio segment to a BytesIO object
+        audio_buffer = BytesIO()
+        wav_segment.export(audio_buffer, format="wav")
+        audio_buffer.seek(0)  # Move to the start of the buffer
+
+        # Transcribe the in-memory audio segment
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            transcribed_segment = model.transcribe(str(wav_segment_file_path))[
-                "segments"
-            ]
-        os.remove(wav_segment_file_path)
-        all_transcribed_lines = []
-        for line in transcribed_segment:
-            all_transcribed_lines.append(line["text"])
-        speaker_transcription = "".join(all_transcribed_lines)
-        speaker["transcription"] = speaker_transcription.lstrip()
+            segments, info = model.transcribe(audio_buffer, beam_size=5, language="en")
 
-    # Build a new text file to construct into the output
+        # Combine transcribed text
+        all_transcribed_lines = [segment.text.strip() for segment in segments]
+        transcription = " ".join(all_transcribed_lines).strip()
+
+        # Add transcription to the group's data
+        group["transcription"] = transcription
+
+    # Construct output text
     transcribed_text_list = []
-    for i, speaker in enumerate(master_dictionary):
-        # Get the data to add to the speaker and timestamp line
-        new_speaker = speaker["label"]
-        new_speaker_start_time = speaker["start"]
-        new_speaker_start_time = (
-            f"{float(new_speaker_start_time):.0f}"  # Format seconds to whole numbers
-        )
+    for group in grouped_segments:
+        new_speaker = group["speaker"]
         new_speaker_start_time = str(
-            datetime.timedelta(seconds=float(new_speaker_start_time))
+            datetime.timedelta(seconds=int(group["start"]))
         )  # Format as H:M:S
 
         # Add the speaker and timestamp line
-        if 1 == 0:
-            transcribed_text_list.append(f"{new_speaker} [{new_speaker_start_time}]\n")
-        else:
-            transcribed_text_list.append(
-                f"\n\n{new_speaker} [{new_speaker_start_time}]\n"
-            )
+        transcribed_text_list.append(f"\n\n{new_speaker} [{new_speaker_start_time}]\n")
+        transcribed_text_list.append(group["transcription"])
 
-        # Add the transcribed content
-        content = speaker["transcription"]
-        transcribed_text_list.append(f"{content}")
+    # Post-process the list into a single string
+    transcribed_text = "".join(transcribed_text_list).strip()
 
-    # Post process the list of segments and speaker lines into a single string and clean
-    transcribed_text = "".join(transcribed_text_list)
-    transcribed_text = transcribed_text.replace("\n ", "\n").lstrip()
-
-    # Summarise the transcribed text
+    # Summarize the transcribed text
     summary_length = 300
     summary = summarise.summarise(transcribed_text, summary_length)
 
-    # Pull out any meeting actions
+    # Extract meeting actions
     actions = summarise.find_actions(transcribed_text)
     summarised_transcribed_text = "\n\n\n".join([summary, actions, transcribed_text])
 
-    # Create text file
+    # Save to text file
     text_file_path = Path(file_parent).joinpath(f"{file_name}.txt")
-    file = open(text_file_path, "w")
-    file.write(summarised_transcribed_text)
+    with open(text_file_path, "w") as file:
+        file.write(summarised_transcribed_text)
 
     # End timing
-    elapsed_time = time.time() - start_time  # Calculate elapsed time
+    elapsed_time = time.time() - start_time
     elapsed_minutes = int(elapsed_time / 60)
     elapsed_seconds = int(elapsed_time % 60)
     print(f"Elapsed time: {elapsed_minutes:.0f}:{elapsed_seconds:.2f}")
-
-    # Delete the mp3 and wav
-    os.remove(wav_audio_file_path)

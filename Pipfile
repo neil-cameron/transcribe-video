@@ -4,19 +4,16 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-soundfile = "*"
-pydub = "*"
 pip = "*"
-install = "*"
 openai = "*"
-whisper-cpp-python = "*"
-openai-whisper = "*"
-whisper = "*"
-simple-diarizer = "*"
-speechbrain = "0.5.16"
+ffmpeg-python = "*"
+soundfile = "*"
+"pyannote.audio" = "*"
+pydub = "*"
+faster-whisper = "*"
 
 [dev-packages]
 black = "*"
 
 [requires]
-python_version = "3.9"
+python_version = "3.12.3"

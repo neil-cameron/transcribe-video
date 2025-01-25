@@ -11,8 +11,6 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "args": [
-                "--number_speakers",
-                "2",
                 "/Users/neil/Downloads/test.mp4",
             ],
         }
