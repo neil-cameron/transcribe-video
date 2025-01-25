@@ -11,6 +11,7 @@ soundfile = "*"
 "pyannote.audio" = "*"
 pydub = "*"
 faster-whisper = "*"
+scipy = "*"
 
 [dev-packages]
 black = "*"
