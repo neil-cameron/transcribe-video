@@ -1,10 +1,10 @@
 # Transcribe Video
 
-A script that takes the path to a video file and diarises it using Simple Diariser and transcribes it using Whisper from OpenAI. It then places a summary at the top using ChatGPT.
+A script that takes the path to a video file and diarises it using Pyannote and transcribes it using Faster Whisper from OpenAI. It then places a summary at the top using ChatGPT.
 
 ## Usage:
 
-transcribe_video.py [-h] [-n NUMBER_SPEAKERS] file_path [file_path ...]
+transcribe_video.py [-h] file_path [file_path ...]
 
 ## Positional Arguments:
 
@@ -14,10 +14,6 @@ A full or relative path to a media file, several media files or a directory of m
 
 
 ## Optional Arguments:
-
--n NUMBER_SPEAKERS, --number_speakers NUMBER_SPEAKERS
-
-The number of speakers in the video. Default = 2
 
 -h, --help
 
