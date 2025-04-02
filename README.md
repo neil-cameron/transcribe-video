@@ -18,3 +18,13 @@ A full or relative path to a media file, several media files or a directory of m
 -h, --help
 
 Show this help message and exit
+
+
+## Additional Requirements:
+
+You will need a file in the root of this project called `config.py` with the below contents:
+
+```
+authorization = "open ai api key goes here"  # openai
+hf_authorization = "huggig face token for pyannote goes here"
+```
